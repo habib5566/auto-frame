@@ -545,8 +545,7 @@
       .panel::before,
       .eyebrow,
       button:not(.secondary) { animation: none; }
-      .rise-in,
-      .check-row-enter { animation: none !important; opacity: 1 !important; transform: none !important; }
+      .rise-in { animation: none !important; opacity: 1 !important; transform: none !important; }
       button { transition: none; }
     }
     .avail-banner {
@@ -571,7 +570,10 @@
     .avail-banner.avail-warn { border-left-color: var(--warn); background: rgba(227, 179, 65, 0.06); }
     .avail-banner .avail-detail { font-size: 0.95rem; color: var(--muted); margin-top: 0.45rem; line-height: 1.6; }
     .avail-banner .avail-tech { font-size: 0.72rem; color: var(--muted-2); margin-top: 0.6rem; font-family: var(--font-mono); word-break: break-all; line-height: 1.45; }
-    .checklist-section { margin-top: 0.5rem; }
+    .checklist-section {
+      margin-top: 0.5rem;
+      opacity: 1;
+    }
     .section-head {
       display: flex;
       flex-wrap: wrap;
@@ -644,20 +646,6 @@
       border-radius: var(--radius-lg);
       border-left: 5px solid var(--muted-2);
       transition: box-shadow 0.28s ease, border-color 0.2s ease, transform 0.25s ease;
-    }
-    .check-row.check-row-enter {
-      animation: rowRise 0.55s cubic-bezier(0.22, 1, 0.36, 1) backwards;
-      animation-delay: calc(min(var(--i, 0), 45) * 0.028s);
-    }
-    @keyframes rowRise {
-      from {
-        opacity: 0;
-        transform: translateY(14px) scale(0.992);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-      }
     }
     .check-row:hover {
       box-shadow: var(--shadow-sm);
@@ -850,7 +838,7 @@
       <div id="scanResult" class="scan-out" hidden></div>
     </section>
 
-    <section class="checklist-section rise-in rise-in-delay" aria-labelledby="checklist-heading">
+    <section class="checklist-section" aria-labelledby="checklist-heading">
       <div class="section-head">
         <div class="section-head-text">
           <h2 class="section-title" id="checklist-heading">Checklist</h2>
@@ -912,9 +900,6 @@
         { id: 'I04', cat: 'Integrations', text: 'Chat, CRM, webhook, and email automation verified.', hint: 'manual' },
       ];
 
-      const countEl = document.getElementById('checklistCount');
-      if (countEl) countEl.textContent = ITEMS.length + ' items';
-
       function escapeHtml(s) {
         return String(s)
           .replace(/&/g, '&amp;')
@@ -942,9 +927,9 @@
         lastScanPayload = null;
       }
       const siteEl = document.getElementById('siteUrl');
-      siteEl.value = state.siteUrl || '';
       const apiBaseEl = document.getElementById('auditApiBase');
-      apiBaseEl.value = state.apiBaseUrl || '';
+      if (siteEl) siteEl.value = state.siteUrl || '';
+      if (apiBaseEl) apiBaseEl.value = state.apiBaseUrl || '';
 
       function normalizeScanApiBase(raw) {
         const s = String(raw || '').trim();
@@ -1060,11 +1045,13 @@
       }
 
       function render() {
+        const countBadge = document.getElementById('checklistCount');
+        if (countBadge) countBadge.textContent = ITEMS.length + ' items';
         const host = document.getElementById('checklist');
         if (!host) return;
         let lastCat = '';
         const frag = document.createDocumentFragment();
-        ITEMS.forEach((it, idx) => {
+        ITEMS.forEach((it) => {
           if (it.cat !== lastCat) {
             lastCat = it.cat;
             const h = document.createElement('div');
@@ -1076,8 +1063,7 @@
           const st = state.items && state.items[it.id] ? state.items[it.id] : { status: 'pending', note: '' };
           const rawStatus = st.status || 'pending';
           const statusKey = ['pending', 'pass', 'fail', 'na'].includes(rawStatus) ? rawStatus : 'pending';
-          row.className = 'check-row row-' + statusKey + ' check-row-enter';
-          row.style.setProperty('--i', String(idx));
+          row.className = 'check-row row-' + statusKey;
           const autoBadge = st.auto ? '<span class="badge auto">Auto from scan</span>' : '';
           row.innerHTML =
             '<div class="check-main">' +
@@ -1239,14 +1225,14 @@
       document.getElementById('btnClear').addEventListener('click', () => {
         if (!confirm('Clear saved checklist + URL from this browser?')) return;
         state = {};
-        siteEl.value = '';
+        if (siteEl) siteEl.value = '';
         lastScanPayload = null;
         localStorage.removeItem(LAST_SCAN_KEY);
         saveState(state);
         document.getElementById('scanResult').hidden = true;
         document.getElementById('backendBanner').hidden = true;
         document.getElementById('backendBanner').textContent = '';
-        apiBaseEl.value = '';
+        if (apiBaseEl) apiBaseEl.value = '';
         render();
         probeScanBackend();
       });
@@ -1266,7 +1252,7 @@
 
       document.getElementById('btnExport').addEventListener('click', () => {
         const rows = [['ID', 'Category', 'Item', 'Status', 'Notes', 'Site URL']];
-        const url = siteEl.value.trim();
+        const url = siteEl ? siteEl.value.trim() : '';
         ITEMS.forEach((it) => {
           const st = (state.items && state.items[it.id]) || { status: 'pending', note: '' };
           const raw = st.status || 'pending';
@@ -1282,21 +1268,25 @@
         URL.revokeObjectURL(a.href);
       });
 
-      siteEl.addEventListener('change', () => {
-        state.siteUrl = siteEl.value.trim();
-        saveState(state);
-      });
+      if (siteEl) {
+        siteEl.addEventListener('change', () => {
+          state.siteUrl = siteEl.value.trim();
+          saveState(state);
+        });
+      }
 
-      apiBaseEl.addEventListener('change', () => {
-        state.apiBaseUrl = apiBaseEl.value.trim();
-        saveState(state);
-        probeScanBackend();
-      });
+      if (apiBaseEl) {
+        apiBaseEl.addEventListener('change', () => {
+          state.apiBaseUrl = apiBaseEl.value.trim();
+          saveState(state);
+          probeScanBackend();
+        });
+      }
 
       document.getElementById('btnScan').addEventListener('click', async () => {
-        const url = siteEl.value.trim();
+        const url = siteEl ? siteEl.value.trim() : '';
         state.siteUrl = url;
-        state.apiBaseUrl = apiBaseEl.value.trim();
+        state.apiBaseUrl = apiBaseEl ? apiBaseEl.value.trim() : '';
         saveState(state);
         const out = document.getElementById('scanResult');
         const btn = document.getElementById('btnScan');
