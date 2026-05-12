@@ -9,6 +9,6 @@
     "go-live:audit:tunnel": "node scripts/go-live-audit-tunnel.cjs"
   },
   "engines": {
-    "node": ">=18"
+    "node": "20.x"
   }
 }

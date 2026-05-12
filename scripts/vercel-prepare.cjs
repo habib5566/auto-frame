@@ -5,23 +5,44 @@
 const fs = require('fs');
 const path = require('path');
 
-const src = path.join(__dirname, '..', 'go-live-audit', 'public');
-const dest = path.join(__dirname, '..', 'public');
+const root = path.join(__dirname, '..');
+console.log('[build] Node', process.version, '| cwd', process.cwd());
+
+const src = path.join(root, 'go-live-audit', 'public');
+const dest = path.join(root, 'public');
+
+function listDirSafe(dir) {
+  try {
+    return fs.readdirSync(dir);
+  } catch {
+    return ['(cannot read)'];
+  }
+}
 
 if (!fs.existsSync(src)) {
-  console.error('Missing source:', src);
+  console.error('[build] FAILED: missing folder:', src);
+  console.error('[build] Repo root contents:', listDirSafe(root));
+  if (fs.existsSync(path.join(root, 'go-live-audit'))) {
+    console.error('[build] go-live-audit/ contents:', listDirSafe(path.join(root, 'go-live-audit')));
+  } else {
+    console.error('[build] go-live-audit/ does NOT exist — push the full Auto-frame folder to GitHub (see README).');
+  }
   process.exit(1);
 }
-fs.rmSync(dest, { recursive: true, force: true });
-fs.cpSync(src, dest, { recursive: true });
-console.log('Vercel: copied go-live-audit/public → public/');
 
-/** Serverless bundle only traces `api/` — copy scan core next to `api/scan.js` for Vercel. */
+if (fs.existsSync(dest)) {
+  fs.rmSync(dest, { recursive: true, force: true });
+}
+fs.mkdirSync(path.dirname(dest), { recursive: true });
+fs.cpSync(src, dest, { recursive: true });
+console.log('[build] copied go-live-audit/public → public/');
+
 const coreSrc = path.join(__dirname, 'go-live-audit-core.js');
-const coreDest = path.join(__dirname, '..', 'api', '_scan-core.js');
+const coreDest = path.join(root, 'api', '_scan-core.js');
 if (!fs.existsSync(coreSrc)) {
-  console.error('Missing scan core:', coreSrc);
+  console.error('[build] FAILED: missing file:', coreSrc);
   process.exit(1);
 }
+fs.mkdirSync(path.dirname(coreDest), { recursive: true });
 fs.copyFileSync(coreSrc, coreDest);
-console.log('Vercel: copied scripts/go-live-audit-core.js → api/_scan-core.js');
+console.log('[build] copied scripts/go-live-audit-core.js → api/_scan-core.js');
