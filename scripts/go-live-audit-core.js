@@ -50,7 +50,14 @@ function isBlockedHost(hostname) {
   return false;
 }
 
-function fetchUrl(targetUrl, maxRedirects = 5) {
+function fetchUrl(targetUrl, maxRedirects = 5, fetchOpts = {}) {
+  const timeoutMs =
+    typeof fetchOpts === 'object' &&
+    fetchOpts != null &&
+    fetchOpts.timeoutMs != null &&
+    Number.isFinite(Number(fetchOpts.timeoutMs))
+      ? Math.min(60_000, Math.max(3000, Number(fetchOpts.timeoutMs)))
+      : 18_000;
   return new Promise((resolve, reject) => {
     const tryOnce = (urlStr, redirectsLeft) => {
       let u;
@@ -79,7 +86,7 @@ function fetchUrl(targetUrl, maxRedirects = 5) {
           'User-Agent': 'Automation-Framework-GoLiveAudit/1.0',
           Accept: 'text/html,application/xhtml+xml;q=0.9,*/*;q=0.8',
         },
-        timeout: 18_000,
+        timeout: timeoutMs,
       };
       if (u.protocol === 'https:' && HTTPS_AGENT) opts.agent = HTTPS_AGENT;
 
@@ -677,11 +684,15 @@ function buildAutoChecks(requestedUrl, finalUrl, statusCode, headers, html, robo
   });
 
   if (html.formCount > 0) {
+    const formWhere =
+      (html._followUpPagesSampled || 0) > 0
+        ? `across the start URL plus ${html._followUpPagesSampled} linked same-origin page sample(s) (not exhaustive)`
+        : 'on this URL';
     byId.set('F01', {
       id: 'F01',
       status: 'pending',
       note:
-        `[auto] Found ${html.formCount} <form> element(s) on this URL — the scanner does not submit forms.\n` +
+        `[auto] Found ${html.formCount} <form> element(s) ${formWhere} — the scanner does not submit forms.\n` +
         'Next: on staging or production, submit each form with realistic data; confirm thank-you/error behaviour; add Pass/Fail + evidence below.',
     });
     byId.set('F02', {
@@ -887,6 +898,152 @@ function buildAutoChecks(requestedUrl, finalUrl, statusCode, headers, html, robo
   return { autoChecks, scanWarnings };
 }
 
+const FOLLOWUP_ASSET_EXT = /\.(css|js|mjs|map|png|jpe?g|gif|webp|svg|ico|woff2?|ttf|eot|pdf|zip|mp4|webm|json)(\?|#|$)/i;
+
+/** Up to `max` same-origin page URLs from HTML (excludes start URL, skips obvious assets). */
+function collectSameOriginPageUrls(finalUrl, body, max) {
+  const out = [];
+  const seen = new Set();
+  try {
+    const origin = new URL(finalUrl);
+    const originHost = origin.hostname;
+    seen.add(origin.href.split('#')[0]);
+
+    const hrefRe = /\bhref\s*=\s*["']([^"']+)["']/gi;
+    let hm;
+    while ((hm = hrefRe.exec(body)) !== null && out.length < max) {
+      const href = hm[1].trim();
+      if (
+        !href ||
+        href.startsWith('#') ||
+        /^javascript:/i.test(href) ||
+        /^mailto:/i.test(href) ||
+        /^tel:/i.test(href)
+      ) {
+        continue;
+      }
+      if (FOLLOWUP_ASSET_EXT.test(href)) continue;
+      let abs;
+      try {
+        abs = new URL(href, finalUrl);
+      } catch {
+        continue;
+      }
+      if (abs.hostname !== originHost) continue;
+      if (!/^https?:$/i.test(abs.protocol)) continue;
+      const key = abs.href.split('#')[0];
+      if (seen.has(key)) continue;
+      seen.add(key);
+      out.push(key);
+    }
+  } catch {
+    /* noop */
+  }
+  return out;
+}
+
+function countMailtoAcrossBodies(bodies) {
+  const mailtoEmails = new Set();
+  let mailtoCount = 0;
+  const mailtoRe = /\bhref\s*=\s*["']mailto:([^"'>\s]+)/gi;
+  for (const raw of bodies) {
+    const b = String(raw || '');
+    mailtoCount += (b.match(/\bhref\s*=\s*["']mailto:/gi) || []).length;
+    let mm;
+    mailtoRe.lastIndex = 0;
+    while ((mm = mailtoRe.exec(b)) !== null) {
+      try {
+        mailtoEmails.add(decodeURIComponent(mm[1].split('?')[0]).toLowerCase());
+      } catch {
+        mailtoEmails.add(mm[1].split('?')[0].toLowerCase());
+      }
+    }
+  }
+  return { mailtoUniqueCount: mailtoEmails.size, mailtoCount };
+}
+
+function mergeHtmlSignals(primary, mainBody, extras) {
+  if (!extras.length) return primary;
+  const analyzed = extras.map((e) => analyzeHtml(e.body, e.finalUrl, e.contentType));
+  const m = { ...primary };
+  let formCount = Number(primary.formCount) || 0;
+  let telCount = Number(primary.telCount) || 0;
+  let formHasRequiredAttr = !!primary.formHasRequiredAttr;
+  let imageTags = Number(primary.imageTags) || 0;
+  let imagesMissingOrEmptyAlt = Number(primary.imagesMissingOrEmptyAlt) || 0;
+  let interactiveApprox = Number(primary.interactiveApprox) || 0;
+  let internalLinkCount = Number(primary.internalLinkCount) || 0;
+
+  for (const o of analyzed) {
+    formCount += Number(o.formCount) || 0;
+    telCount += Number(o.telCount) || 0;
+    formHasRequiredAttr = formHasRequiredAttr || !!o.formHasRequiredAttr;
+    imageTags += Number(o.imageTags) || 0;
+    imagesMissingOrEmptyAlt += Number(o.imagesMissingOrEmptyAlt) || 0;
+    interactiveApprox = Math.min(8000, interactiveApprox + (Number(o.interactiveApprox) || 0));
+    internalLinkCount = Math.max(internalLinkCount, Number(o.internalLinkCount) || 0);
+    m.loremIpsumDetected = m.loremIpsumDetected || o.loremIpsumDetected;
+    m.comingSoonDetected = m.comingSoonDetected || o.comingSoonDetected;
+    m.placeholderPhrasesDetected = m.placeholderPhrasesDetected || o.placeholderPhrasesDetected;
+    m.zendeskSnippetDetected = m.zendeskSnippetDetected || o.zendeskSnippetDetected;
+    m.modernImageExt = m.modernImageExt || o.modernImageExt;
+    m.legalLinkHints = m.legalLinkHints || o.legalLinkHints;
+    m.ssrHints = m.ssrHints || o.ssrHints;
+    m.logoLikely = m.logoLikely || o.logoLikely;
+    m.robotsMetaNoindex = m.robotsMetaNoindex || o.robotsMetaNoindex;
+    m.hasViewport = m.hasViewport || o.hasViewport;
+    m.hasCharset = m.hasCharset || o.hasCharset;
+    m.hasTitle = m.hasTitle || o.hasTitle;
+    m.hasMetaDescription = m.hasMetaDescription || o.hasMetaDescription;
+    m.hasFaviconLink = m.hasFaviconLink || o.hasFaviconLink;
+  }
+
+  const mailAgg = countMailtoAcrossBodies([mainBody, ...extras.map((e) => e.body)]);
+  m.formCount = formCount;
+  m.telCount = telCount;
+  m.mailtoCount = mailAgg.mailtoCount;
+  m.mailtoUniqueCount = mailAgg.mailtoUniqueCount;
+  m.formHasRequiredAttr = formHasRequiredAttr;
+  m.imageTags = imageTags;
+  m.imagesMissingOrEmptyAlt = imagesMissingOrEmptyAlt;
+  m.interactiveApprox = interactiveApprox;
+  m.internalLinkCount = internalLinkCount;
+  m._followUpPagesSampled = extras.length;
+  return m;
+}
+
+/**
+ * Sequential GET of a few same-origin pages linked from the start HTML (bounded time).
+ * @returns {{ samples: Array<{ body: string; finalUrl: string; contentType: string }>; queuedUrls: string[] }}
+ */
+async function fetchFollowUpSameOriginSamples(finalUrl, mainBody, opts = {}) {
+  const maxPages = opts.maxPages != null ? opts.maxPages : 2;
+  const maxTotalMs = opts.maxTotalMs != null ? opts.maxTotalMs : 20_000;
+  const deadline = Date.now() + maxTotalMs;
+  const urls = collectSameOriginPageUrls(finalUrl, mainBody, maxPages);
+  /** @type {Array<{ body: string; finalUrl: string; contentType: string }>} */
+  const samples = [];
+  for (const href of urls) {
+    if (Date.now() > deadline) break;
+    try {
+      const b = await fetchUrl(href, 3, { timeoutMs: 10_000 });
+      if (b.statusCode >= 200 && b.statusCode < 400 && b.body) {
+        const ct = String(b.contentType || '');
+        if (/html|text\/plain/i.test(ct) || /<html[\s>]/i.test(b.body.slice(0, 2500))) {
+          samples.push({
+            body: b.body,
+            finalUrl: b.finalUrl,
+            contentType: ct,
+          });
+        }
+      }
+    } catch {
+      /* skip */
+    }
+  }
+  return { samples, queuedUrls: urls };
+}
+
 async function fetchRobotsTxt(originHref) {
   const out = { fetched: false, status: null, hasSitemapLine: false, error: '', preview: '' };
   try {
@@ -963,9 +1120,6 @@ async function handleScan(req, res) {
 
     const html = analyzeHtml(body, finalUrl, contentType);
     html._contentType = contentType;
-    const bodySlice = body.slice(0, 120_000);
-    const xRobots = String(headers['x-robots-tag'] || '').toLowerCase();
-    const xRobotsNoindex = xRobots.includes('noindex');
 
     let robotsInfo = { fetched: false, status: null, hasSitemapLine: false, error: '', preview: '' };
     if (statusCode && statusCode < 500) {
@@ -976,12 +1130,30 @@ async function handleScan(req, res) {
       }
     }
 
+    let followUpSamples = [];
+    if (statusCode >= 200 && statusCode < 500 && html.isHtmlDocument) {
+      const fu = await fetchFollowUpSameOriginSamples(finalUrl, body, { maxPages: 2, maxTotalMs: 20_000 });
+      followUpSamples = fu.samples;
+    }
+
+    const mergedHtml =
+      followUpSamples.length > 0 ? mergeHtmlSignals(html, body, followUpSamples) : html;
+    mergedHtml._contentType = contentType;
+
+    const bodySlice = [body, ...followUpSamples.map((s) => s.body)]
+      .map((b) => String(b || '').slice(0, 80_000))
+      .join('\n')
+      .slice(0, 180_000);
+
+    const xRobots = String(headers['x-robots-tag'] || '').toLowerCase();
+    const xRobotsNoindex = xRobots.includes('noindex');
+
     const { autoChecks, scanWarnings } = buildAutoChecks(
       requestedUrl,
       finalUrl,
       statusCode,
       headers,
-      html,
+      mergedHtml,
       robotsInfo,
       bodySlice
     );
@@ -992,13 +1164,19 @@ async function handleScan(req, res) {
       });
     }
 
+    if (followUpSamples.length > 0) {
+      scanWarnings.push({
+        message: `[auto] Follow-up pass: merged ${followUpSamples.length} extra same-origin HTML page(s) linked from the start URL (sample only; not a full crawl).`,
+      });
+    }
+
     const overallSummary = buildOverallSummary({
       reachable: true,
       availability,
       statusCode,
       autoChecks,
       scanWarnings,
-      html,
+      html: mergedHtml,
     });
 
     sendJson(res, 200, {
@@ -1010,13 +1188,17 @@ async function handleScan(req, res) {
       contentType: contentType || null,
       xRobotsTag: headers['x-robots-tag'] || null,
       xRobotsNoindex,
-      htmlSignals: html,
+      htmlSignals: mergedHtml,
       robotsTxt: robotsInfo,
       autoChecks,
       scanWarnings,
       overallSummary,
+      scanMeta: {
+        followUpPagesFetched: followUpSamples.length,
+        followUpPageUrls: followUpSamples.map((s) => s.finalUrl),
+      },
       disclaimer:
-        'Shallow scan: one HTML page plus robots.txt only. Form delivery, approvals, Zendesk UX, CLS, and full-site crawling still require manual QA or Playwright.',
+        'Scan uses the start URL and robots.txt, then may fetch up to two same-origin pages linked from that HTML (time-capped) to widen signals. Form delivery, Zendesk, CLS, and full-site crawling still need manual QA or Playwright.',
     });
   } catch (e) {
     sendJson(res, 400, { ok: false, error: String(e.message || e), requestedUrl });

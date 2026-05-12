@@ -485,7 +485,7 @@
       width: 35%;
       border-radius: 999px;
       background: linear-gradient(90deg, var(--accent), var(--accent-2));
-      animation: barSweep 1.25s ease-in-out infinite;
+      animation: barSweep 2.1s ease-in-out infinite;
     }
     @keyframes barSweep {
       0% { transform: translateX(-100%); width: 40%; }
@@ -814,7 +814,7 @@
       <div class="panel-head">
         <h2 class="panel-title" id="scan-heading">Quick scan</h2>
         <p class="panel-desc">
-          Fetch one page + <code>robots.txt</code> via <code>POST /api/scan</code>. Same host as this page → leave <strong>Scan API base</strong> empty.
+          Fetches the start page, <code>robots.txt</code>, then up to <strong>two</strong> linked same-origin HTML pages when the scan finds them (extra pass, time-limited). Same host as this page → leave <strong>Scan API base</strong> empty.
           Static / Vercel-only UI → run <code>npm run go-live:audit:tunnel</code> locally and paste the tunnel <code>https://…</code> below.
         </p>
       </div>
@@ -1313,15 +1313,31 @@
             '<div class="scan-msg scan-msg-warn">Scan API base must be a full URL like <code>https://xxxx.ngrok-free.app</code> (no path).</div>';
           return;
         }
+        let stepTimer = null;
+        const scanStarted = Date.now();
         btn.disabled = true;
         out.hidden = false;
+        const loadingSteps = [
+          'Connecting and downloading the start page…',
+          'Fetching robots.txt…',
+          'Sampling up to two same-origin pages linked from that HTML…',
+          'Merging HTML signals for checklist rows…',
+        ];
+        let stepIdx = 0;
         out.innerHTML =
           '<div class="scan-loading">' +
           '<div class="scan-loading-top">' +
           '<div class="scan-orbit" aria-hidden="true"><span></span><span></span><span></span></div>' +
-          '<div><div class="scan-loading-title">Scanning live…</div>' +
-          '<div class="scan-loading-sub">Fetching HTML, headers, and robots.txt</div></div></div>' +
+          '<div><div class="scan-loading-title">Scanning…</div>' +
+          '<div class="scan-loading-sub" id="scanLoadingSub">' +
+          escapeHtml(loadingSteps[0]) +
+          '</div></div></div>' +
           '<div class="scan-loading-bar"><div class="scan-loading-bar-fill"></div></div></div>';
+        stepTimer = window.setInterval(function () {
+          stepIdx = (stepIdx + 1) % loadingSteps.length;
+          const el = document.getElementById('scanLoadingSub');
+          if (el) el.textContent = loadingSteps[stepIdx];
+        }, 2200);
         try {
           const res = await fetch(scanEndpoint(), {
             method: 'POST',
@@ -1356,6 +1372,18 @@
             'Content-Type: ' + (data.contentType || '—'),
             'HTTP status: ' + data.statusCode,
             'HTTPS: ' + (h.hasHttps ? 'yes' : 'no'),
+          ];
+          if (data.scanMeta && data.scanMeta.followUpPagesFetched > 0) {
+            lines.push(
+              'Follow-up pages merged: ' + data.scanMeta.followUpPagesFetched + ' (same-origin sample).'
+            );
+            (data.scanMeta.followUpPageUrls || []).forEach(function (u) {
+              lines.push('  — ' + u);
+            });
+          } else if (data.scanMeta) {
+            lines.push('Follow-up pages: none fetched (no suitable links or time budget).');
+          }
+          lines.push(
             'X-Robots-Tag: ' + (data.xRobotsTag || '—'),
             'HTML robots meta (noindex/nofollow): ' + (h.robotsMetaNoindex ? 'yes' : 'no'),
             'tel: links: ' + (h.telCount != null ? h.telCount : '—') + ' | mailto: links: ' + (h.mailtoCount != null ? h.mailtoCount : '—'),
@@ -1417,6 +1445,11 @@
             escapeHtml(e.message) +
             '</div>';
         } finally {
+          if (stepTimer) window.clearInterval(stepTimer);
+          const wait = Math.max(0, 3200 - (Date.now() - scanStarted));
+          await new Promise(function (resolve) {
+            window.setTimeout(resolve, wait);
+          });
           btn.disabled = false;
         }
       });
