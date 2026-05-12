@@ -53,7 +53,8 @@ Agar poora `Automation-Framework` repo import kiya hai aur checklist `Auto-frame
 
 #### Build fail ho to (common)
 - **Build Logs** scroll karke **pehli error line** dekho.  
-- Agar **`missing folder: .../go-live-audit/public`** aaye → GitHub repo mein **`go-live-audit/public/index.html`** push nahi hua. Local: `git add go-live-audit` → `commit` → `push`.  
+- Agar **`missing folder: .../go-live-audit/public`** aaye → GitHub par **`go-live-audit/public/index.html`** push nahi hua. Pehle **`.gitignore`** mein sirf **`/public/`** hona chahiye (root build), **`public/`** pattern mat use karo — warna Git **`go-live-audit/public`** ignore kar deta hai. Fix ke baad:
+  `git add -f go-live-audit/public` → `commit` → `push` → Vercel Redeploy.
 - Vercel **Settings → General → Node.js Version** → **20.x** select karo (engines bhi `20.x` hai).
 
 ### Step 7 — API test (pehle yeh)

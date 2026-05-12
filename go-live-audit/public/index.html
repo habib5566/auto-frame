@@ -485,7 +485,7 @@
       width: 35%;
       border-radius: 999px;
       background: linear-gradient(90deg, var(--accent), var(--accent-2));
-      animation: barSweep 1.25s ease-in-out infinite;
+      animation: barSweep 2.6s ease-in-out infinite;
     }
     @keyframes barSweep {
       0% { transform: translateX(-100%); width: 40%; }
@@ -803,20 +803,15 @@
     <span class="eyebrow">Release QA</span>
     <h1>Go-Live Master Checklist</h1>
     <p class="sub">
-      With <strong>Run quick scan</strong> (via this server, e.g. <code>http://localhost:3940</code>), each row gets a status:
-      <strong>Pass</strong> / <strong>Fail</strong> when signals are clear;
-      <strong>Needs check</strong> when the scan cannot auto-set Pass or Fail — you verify, then pick Pass or Fail.
-      <strong>Not scored</strong> only if that row does not apply to this release.
-      Notes with <strong>[auto]</strong> come from the scan. The panel shows <strong>reachability</strong> (up, DNS, timeout, TLS, HTTP 5xx). Deep QA (forms inbox, Zendesk, full crawl) stays manual or Playwright.
+      Enter your live site URL and use <strong>Run site scan</strong>. Rows marked <strong>[auto]</strong> use fetched HTML and reachability signals; you still confirm Pass / Fail / Not scored where needed.
     </p>
   </header>
   <main class="app-main">
     <section class="panel rise-in" aria-labelledby="scan-heading">
       <div class="panel-head">
-        <h2 class="panel-title" id="scan-heading">Quick scan</h2>
+        <h2 class="panel-title" id="scan-heading">Site scan</h2>
         <p class="panel-desc">
-          Fetch one page + <code>robots.txt</code> via <code>POST /api/scan</code>. Same host as this page = leave <strong>Scan API base</strong> empty.
-          Static / Vercel-only UI = run <code>npm run go-live:audit:tunnel</code> locally, paste the tunnel <code>https://…</code> below.
+          The API fetches the start page, <code>robots.txt</code>, and several same-origin pages linked from that HTML (capped for speed). Leave <strong>Scan API base</strong> empty when this host serves <code>POST /api/scan</code>.
         </p>
       </div>
       <div class="toolbar-grid">
@@ -840,7 +835,7 @@
             <span>Auto-fill checklist after scan</span>
           </label>
           <div class="btn-group">
-            <button type="button" id="btnScan">Run quick scan</button>
+            <button type="button" id="btnScan">Run site scan</button>
             <button type="button" class="secondary" id="btnApply" title="Re-apply results from the last successful scan">Apply last scan</button>
             <button type="button" class="secondary" id="btnExport">Export CSV</button>
             <button type="button" class="secondary" id="btnClear">Clear saved</button>
@@ -865,14 +860,11 @@
       <div id="checklist"></div>
     </section>
   </main>
-  <footer class="site-footer">
-    This page: <strong id="selfLink"></strong>. Tunneled scan API: <code>npm run go-live:audit:tunnel</code> (see repo <code>go-live-audit/TUNNEL.md</code>). Full stack on Vercel: <code>go-live-audit/VERCEL.md</code>.
-  </footer>
+  <footer class="site-footer" aria-hidden="true"></footer>
   <script>
     (function () {
       const STORAGE_KEY = 'goLiveAudit_v1';
       const LAST_SCAN_KEY = 'goLiveAudit_lastScan_v1';
-      document.getElementById('selfLink').textContent = window.location.origin;
 
       const ITEMS = [
         { id: 'C01', cat: 'Content', text: 'No dummy content, placeholder text, or temporary images anywhere.', hint: 'manual + scan flags for common dummy phrases / lorem' },
@@ -1259,7 +1251,7 @@
         if (lastScanPayload && Array.isArray(lastScanPayload.autoChecks)) {
           applyAutoChecks(lastScanPayload.autoChecks);
         } else {
-          alert('Run a successful quick scan first, then use Apply last scan.');
+          alert('Run a successful site scan first, then use Apply last scan.');
         }
       });
 
@@ -1314,13 +1306,26 @@
         }
         btn.disabled = true;
         out.hidden = false;
+        const loadingSteps = [
+          'Fetching the start page…',
+          'Loading robots.txt and sampling linked same-origin pages…',
+          'Merging HTML signals (forms, meta, tracking snippets)…',
+        ];
+        let stepIdx = 0;
         out.innerHTML =
           '<div class="scan-loading">' +
           '<div class="scan-loading-top">' +
           '<div class="scan-orbit" aria-hidden="true"><span></span><span></span><span></span></div>' +
-          '<div><div class="scan-loading-title">Scanning live…</div>' +
-          '<div class="scan-loading-sub">Fetching HTML, headers, and robots.txt</div></div></div>' +
+          '<div><div class="scan-loading-title">Running site scan…</div>' +
+          '<div class="scan-loading-sub" id="scanLoadingSub">' +
+          escapeHtml(loadingSteps[0]) +
+          '</div></div></div>' +
           '<div class="scan-loading-bar"><div class="scan-loading-bar-fill"></div></div></div>';
+        const stepTimer = window.setInterval(function () {
+          stepIdx = Math.min(stepIdx + 1, loadingSteps.length - 1);
+          const el = document.getElementById('scanLoadingSub');
+          if (el) el.textContent = loadingSteps[stepIdx];
+        }, 3400);
         try {
           const res = await fetch(scanEndpoint(), {
             method: 'POST',
@@ -1355,6 +1360,23 @@
             'Content-Type: ' + (data.contentType || '—'),
             'HTTP status: ' + data.statusCode,
             'HTTPS: ' + (h.hasHttps ? 'yes' : 'no'),
+          ];
+          if (data.deepScan) {
+            const ds = data.deepScan;
+            if (ds.extraPagesFetched > 0) {
+              lines.push(
+                'Deep sample: ' + ds.extraPagesFetched + ' extra same-origin page(s) merged into signals.'
+              );
+              (ds.extraPageUrls || []).forEach(function (u) {
+                lines.push('  — ' + u);
+              });
+            } else {
+              lines.push(
+                'Deep sample: no extra same-origin pages (few internal links, blocked URLs, or deadline reached).'
+              );
+            }
+          }
+          lines.push(
             'X-Robots-Tag: ' + (data.xRobotsTag || '—'),
             'HTML robots meta (noindex/nofollow): ' + (h.robotsMetaNoindex ? 'yes' : 'no'),
             'tel: links: ' + (h.telCount != null ? h.telCount : '—') + ' | mailto: links: ' + (h.mailtoCount != null ? h.mailtoCount : '—'),
@@ -1416,6 +1438,7 @@
             escapeHtml(e.message) +
             '</div>';
         } finally {
+          window.clearInterval(stepTimer);
           btn.disabled = false;
         }
       });
