@@ -1386,7 +1386,7 @@
             '“Coming soon” / placeholder phrases: ' +
               (h.comingSoonDetected || h.placeholderPhrasesDetected ? 'FLAG' : 'not flagged'),
             '<img> tags: ' + (h.imageTags != null ? h.imageTags : '—') + ' | missing/empty alt (rough): ' + (h.imagesMissingOrEmptyAlt != null ? h.imagesMissingOrEmptyAlt : '—'),
-          ];
+          );
           if (data.robotsTxt && data.robotsTxt.fetched) {
             lines.push(
               'robots.txt HTTP: ' +
