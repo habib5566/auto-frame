@@ -1,0 +1,11 @@
+# Render Blueprint — free HTTPS URL for UI + /api/scan (same origin).
+# https://dashboard.render.com → New → Blueprint → connect this repo → apply.
+services:
+  - type: web
+    name: go-live-audit
+    runtime: node
+    plan: free
+    region: oregon
+    buildCommand: npm install
+    startCommand: node scripts/go-live-audit-server.js
+    healthCheckPath: /

@@ -1,0 +1,9 @@
+node_modules/
+public/
+api/_scan-core.js
+.env
+.env.*
+*.log
+*.zip
+.DS_Store
+Thumbs.db

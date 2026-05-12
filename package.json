@@ -1,0 +1,14 @@
+{
+  "name": "auto-frame",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Go-Live Master Checklist — standalone (UI + scan API). Push only this folder to GitHub as its own repo.",
+  "scripts": {
+    "build": "node scripts/vercel-prepare.cjs",
+    "go-live:audit": "node scripts/go-live-audit-server.js",
+    "go-live:audit:tunnel": "node scripts/go-live-audit-tunnel.cjs"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
