@@ -1,0 +1,1428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Website Go-Live Master Checklist — Audit</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg-deep: #05070c;
+      --bg: #0a0e14;
+      --surface: #121826;
+      --surface-2: #181f2e;
+      --elevated: #1e2738;
+      --text: #f6f8fb;
+      --text-secondary: #d2dae5;
+      --muted: #94a3b8;
+      --muted-2: #64748b;
+      --accent: #38bdf8;
+      --accent-2: #818cf8;
+      --accent-dim: rgba(56, 189, 248, 0.12);
+      --accent-hover: #7dd3fc;
+      --pass: #4ade80;
+      --fail: #fb7185;
+      --warn: #fbbf24;
+      --border: rgba(248, 250, 252, 0.1);
+      --border-strong: rgba(248, 250, 252, 0.18);
+      --radius-sm: 10px;
+      --radius-md: 14px;
+      --radius-lg: 22px;
+      --radius-xl: 28px;
+      --shadow-sm: 0 4px 16px rgba(0, 0, 0, 0.35);
+      --shadow-md: 0 12px 48px rgba(0, 0, 0, 0.55);
+      --shadow-xl: 0 24px 80px rgba(0, 0, 0, 0.55);
+      --shadow-glow: 0 0 0 4px rgba(56, 189, 248, 0.15), 0 0 40px rgba(56, 189, 248, 0.08);
+      --font: "IBM Plex Sans", ui-sans-serif, system-ui, sans-serif;
+      --font-display: "Outfit", var(--font);
+      --font-mono: "IBM Plex Mono", ui-monospace, monospace;
+    }
+    * { box-sizing: border-box; }
+    html { -webkit-font-smoothing: antialiased; }
+    .bg-mesh {
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      pointer-events: none;
+      overflow: hidden;
+      background: var(--bg-deep);
+    }
+    .bg-mesh::before {
+      content: "";
+      position: absolute;
+      inset: -20%;
+      background:
+        radial-gradient(ellipse 50% 45% at 30% 15%, rgba(56, 189, 248, 0.22), transparent 55%),
+        radial-gradient(ellipse 45% 40% at 85% 25%, rgba(129, 140, 248, 0.18), transparent 50%),
+        radial-gradient(ellipse 40% 50% at 10% 70%, rgba(74, 222, 128, 0.08), transparent 45%),
+        radial-gradient(ellipse 60% 60% at 70% 90%, rgba(56, 189, 248, 0.06), transparent 55%);
+      animation: meshDrift 22s ease-in-out infinite alternate;
+    }
+    .bg-mesh::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+      opacity: 0.5;
+      mix-blend-mode: overlay;
+    }
+    @keyframes meshDrift {
+      0% { transform: scale(1) translate(0, 0) rotate(0deg); }
+      100% { transform: scale(1.07) translate(-3%, 2%) rotate(1deg); }
+    }
+    body {
+      margin: 0;
+      font-family: var(--font);
+      font-size: 1.0625rem;
+      color: var(--text);
+      line-height: 1.6;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    .site-header {
+      padding: clamp(2rem, 5vw, 3rem) clamp(1.5rem, 5vw, 3.5rem) clamp(1.75rem, 4vw, 2.5rem);
+      border-bottom: 1px solid var(--border);
+      background: linear-gradient(180deg, rgba(18, 24, 38, 0.92) 0%, rgba(10, 14, 20, 0.55) 100%);
+      backdrop-filter: blur(20px) saturate(1.2);
+    }
+    .eyebrow {
+      display: inline-block;
+      font-family: var(--font-display);
+      font-size: 0.75rem;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 0.65rem;
+      animation: eyebrowGlow 4s ease-in-out infinite;
+    }
+    @keyframes eyebrowGlow {
+      0%, 100% { filter: drop-shadow(0 0 8px rgba(56, 189, 248, 0.35)); }
+      50% { filter: drop-shadow(0 0 16px rgba(129, 140, 248, 0.45)); }
+    }
+    h1 {
+      font-family: var(--font-display);
+      margin: 0 0 0.85rem;
+      font-size: clamp(1.85rem, 4.5vw, 2.65rem);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      line-height: 1.12;
+      color: var(--text);
+      background: linear-gradient(135deg, #fff 0%, #cbd5e1 55%, #94a3b8 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    .sub {
+      color: var(--muted);
+      font-size: clamp(0.95rem, 1.8vw, 1.08rem);
+      max-width: 58rem;
+      line-height: 1.75;
+    }
+    .sub code {
+      font-family: var(--font-mono);
+      font-size: 0.82em;
+      padding: 0.12rem 0.4rem;
+      border-radius: 6px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+    }
+    .sub strong { color: var(--text-secondary); font-weight: 600; }
+    @supports not ((-webkit-background-clip: text) or (background-clip: text)) {
+      h1 {
+        color: var(--text);
+        background: none;
+      }
+    }
+    .app-main {
+      flex: 1;
+      padding: clamp(1.75rem, 4vw, 3rem) clamp(1.25rem, 4vw, 2.5rem) clamp(3rem, 6vw, 5rem);
+      max-width: min(92rem, 100%);
+      margin: 0 auto;
+      width: 100%;
+    }
+    .rise-in {
+      animation: riseIn 0.85s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+    }
+    .rise-in-delay {
+      animation-delay: 0.1s;
+    }
+    @keyframes riseIn {
+      from {
+        opacity: 0;
+        transform: translateY(28px) scale(0.985);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+    .panel {
+      position: relative;
+      background: linear-gradient(165deg, rgba(30, 39, 56, 0.65) 0%, rgba(18, 24, 38, 0.95) 100%);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      padding: clamp(1.75rem, 3vw, 2.5rem) clamp(1.5rem, 3vw, 2.25rem);
+      margin-bottom: clamp(1.75rem, 3vw, 2.5rem);
+      box-shadow: var(--shadow-xl);
+      overflow: hidden;
+    }
+    .panel::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--accent), var(--accent-2), var(--accent));
+      background-size: 200% 100%;
+      animation: borderShine 5s linear infinite;
+    }
+    @keyframes borderShine {
+      0% { background-position: 0% 50%; }
+      100% { background-position: 200% 50%; }
+    }
+    .panel-head {
+      margin-bottom: 1.5rem;
+      padding-bottom: 1.15rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .panel-title {
+      font-family: var(--font-display);
+      margin: 0;
+      font-size: clamp(1.35rem, 2.5vw, 1.75rem);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--text);
+    }
+    .panel-desc {
+      margin: 0.5rem 0 0;
+      font-size: clamp(0.9rem, 1.5vw, 1rem);
+      color: var(--muted);
+      line-height: 1.65;
+    }
+    /* Full-width URL row — never squeeze beside buttons (was breaking at 900px+ grid). */
+    .toolbar-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+    .field-block {
+      width: 100%;
+      min-width: 0;
+    }
+    .field-block label {
+      display: block;
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 0.55rem;
+    }
+    .label-hint {
+      font-weight: 600;
+      text-transform: none;
+      letter-spacing: 0;
+      color: var(--muted-2);
+      font-size: 0.68rem;
+    }
+    input[type="url"],
+    input[type="text"] {
+      display: block;
+      width: 100%;
+      min-width: 0;
+      min-height: 3.35rem;
+      padding: 0.85rem 1.15rem;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-strong);
+      background: rgba(5, 8, 14, 0.75);
+      color: var(--text);
+      font-family: var(--font-mono);
+      font-size: 1.0625rem;
+      line-height: 1.45;
+      transition: border-color 0.2s ease, box-shadow 0.25s ease, transform 0.2s ease;
+    }
+    input[type="url"]::placeholder { color: var(--muted-2); }
+    input[type="url"]:hover { border-color: rgba(88, 166, 255, 0.35); }
+    input[type="url"]:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: var(--shadow-glow);
+      transform: translateY(-1px);
+    }
+    .scan-actions {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.75rem 1rem;
+      padding-top: 0.15rem;
+    }
+    .scan-actions .chk-wrap {
+      flex: 1 1 16rem;
+    }
+    .scan-actions .btn-group {
+      flex: 1 1 auto;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.45rem;
+      justify-content: flex-start;
+    }
+    @media (min-width: 640px) {
+      .scan-actions .btn-group { justify-content: flex-end; }
+    }
+    .chk-wrap {
+      display: flex;
+      align-items: center;
+      gap: 0.55rem;
+      cursor: pointer;
+      font-size: 0.95rem;
+      color: var(--text-secondary);
+      user-select: none;
+      margin-right: 0.25rem;
+    }
+    .chk-wrap input[type="checkbox"] {
+      width: 1.15rem;
+      height: 1.15rem;
+      accent-color: var(--accent);
+      cursor: pointer;
+    }
+    button {
+      padding: 0.78rem 1.45rem;
+      border-radius: var(--radius-md);
+      border: 1px solid transparent;
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 1rem;
+      letter-spacing: 0.02em;
+      cursor: pointer;
+      transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.25s ease, opacity 0.15s ease;
+    }
+    button:not(.secondary) {
+      position: relative;
+      overflow: hidden;
+      background: linear-gradient(135deg, #38bdf8 0%, #2563eb 50%, #4f46e5 100%);
+      background-size: 200% 100%;
+      color: #fff;
+      box-shadow: 0 6px 28px rgba(56, 189, 248, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+      animation: btnGradient 6s ease infinite;
+    }
+    @keyframes btnGradient {
+      0%, 100% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+    }
+    button:not(.secondary):hover:not(:disabled) {
+      transform: translateY(-3px) scale(1.02);
+      box-shadow: 0 12px 40px rgba(56, 189, 248, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    }
+    button:not(.secondary)::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(105deg, transparent 35%, rgba(255, 255, 255, 0.18) 50%, transparent 65%);
+      transform: translateX(-120%);
+      transition: transform 0.65s ease;
+      pointer-events: none;
+    }
+    button:not(.secondary):hover:not(:disabled)::after {
+      transform: translateX(120%);
+    }
+    button:not(.secondary):active:not(:disabled) { transform: translateY(0) scale(1); }
+    button.secondary {
+      background: rgba(248, 250, 252, 0.04);
+      border-color: var(--border-strong);
+      color: var(--accent-hover);
+      box-shadow: none;
+    }
+    button.secondary:hover:not(:disabled) {
+      background: rgba(56, 189, 248, 0.12);
+      border-color: rgba(56, 189, 248, 0.45);
+      transform: translateY(-2px);
+    }
+    button:disabled { opacity: 0.45; cursor: not-allowed; transform: none; box-shadow: none; }
+    .scan-out {
+      margin-top: 1.35rem;
+      font-size: 0.95rem;
+      color: var(--muted);
+      word-break: break-word;
+    }
+    .overall-summary {
+      margin-bottom: 1rem;
+      border-radius: var(--radius-lg);
+      padding: 1rem 1.2rem;
+      border: 1px solid var(--border);
+      font-size: 0.95rem;
+      line-height: 1.55;
+    }
+    .overall-summary strong {
+      display: block;
+      font-family: var(--font-display);
+      font-size: 1.08rem;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.45rem;
+      color: var(--text);
+    }
+    .overall-sub {
+      color: var(--muted);
+      font-size: 0.92rem;
+      margin-bottom: 0.55rem;
+    }
+    .overall-tally {
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--muted-2);
+      letter-spacing: 0.02em;
+      text-transform: uppercase;
+    }
+    .overall-summary.overall-good {
+      border-color: rgba(63, 185, 80, 0.35);
+      background: rgba(63, 185, 80, 0.07);
+    }
+    .overall-summary.overall-good strong { color: #7ee787; }
+    .overall-summary.overall-caution {
+      border-color: rgba(227, 179, 65, 0.45);
+      background: rgba(227, 179, 65, 0.08);
+    }
+    .overall-summary.overall-caution strong { color: #e3b341; }
+    .overall-summary.overall-concern {
+      border-color: rgba(248, 131, 73, 0.45);
+      background: rgba(248, 131, 73, 0.07);
+    }
+    .overall-summary.overall-concern strong { color: #fb923c; }
+    .overall-summary.overall-bad {
+      border-color: rgba(248, 81, 73, 0.45);
+      background: rgba(248, 81, 73, 0.08);
+    }
+    .overall-summary.overall-bad strong { color: #ff7b72; }
+    .scan-out strong { color: var(--text); }
+    .scan-scroll {
+      margin-top: 1rem;
+      max-height: min(58vh, 36rem);
+      overflow-y: auto;
+      padding: 1.15rem 1.35rem;
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border);
+      background: rgba(5, 8, 14, 0.65);
+      box-shadow: inset 0 2px 24px rgba(0, 0, 0, 0.35);
+    }
+    .scan-scroll::-webkit-scrollbar { width: 8px; }
+    .scan-scroll::-webkit-scrollbar-thumb {
+      background: var(--border-strong);
+      border-radius: 8px;
+    }
+    .scan-line {
+      padding: 0.5rem 0;
+      border-bottom: 1px solid rgba(248, 250, 252, 0.06);
+      font-size: 0.92rem;
+      line-height: 1.55;
+      color: var(--text-secondary);
+    }
+    .scan-line:last-child { border-bottom: none; }
+    .scan-loading {
+      padding: 1.75rem 1.25rem;
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border);
+      background: rgba(5, 8, 14, 0.7);
+    }
+    .scan-loading-top {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1.15rem;
+    }
+    .scan-orbit {
+      position: relative;
+      width: 48px;
+      height: 48px;
+      flex-shrink: 0;
+    }
+    .scan-orbit span {
+      position: absolute;
+      inset: 0;
+      border: 3px solid transparent;
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: orbitSpin 1.1s linear infinite;
+    }
+    .scan-orbit span:nth-child(2) {
+      inset: 6px;
+      border-top-color: var(--accent-2);
+      animation-duration: 1.6s;
+      animation-direction: reverse;
+    }
+    .scan-orbit span:nth-child(3) {
+      inset: 12px;
+      border-top-color: rgba(56, 189, 248, 0.35);
+      animation-duration: 0.85s;
+    }
+    @keyframes orbitSpin {
+      to { transform: rotate(360deg); }
+    }
+    .scan-loading-title {
+      font-family: var(--font-display);
+      font-weight: 700;
+      font-size: 1.15rem;
+      color: var(--text);
+      letter-spacing: -0.02em;
+    }
+    .scan-loading-sub {
+      font-size: 0.88rem;
+      color: var(--muted);
+      margin-top: 0.2rem;
+    }
+    .scan-loading-bar {
+      height: 6px;
+      border-radius: 999px;
+      background: rgba(248, 250, 252, 0.08);
+      overflow: hidden;
+    }
+    .scan-loading-bar-fill {
+      height: 100%;
+      width: 35%;
+      border-radius: 999px;
+      background: linear-gradient(90deg, var(--accent), var(--accent-2));
+      animation: barSweep 1.25s ease-in-out infinite;
+    }
+    @keyframes barSweep {
+      0% { transform: translateX(-100%); width: 40%; }
+      50% { width: 65%; }
+      100% { transform: translateX(280%); width: 40%; }
+    }
+    .pulse-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--accent);
+      animation: pulse 1s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.35; transform: scale(0.85); }
+    }
+    .scan-msg {
+      padding: 0.85rem 1rem;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border);
+      font-size: 0.875rem;
+    }
+    .scan-msg-warn { color: var(--warn); border-color: rgba(227, 179, 65, 0.35); background: rgba(227, 179, 65, 0.06); }
+    .backend-banner {
+      margin-top: 1rem;
+      padding: 1rem 1.15rem;
+      border-radius: var(--radius-lg);
+      font-size: 0.92rem;
+      line-height: 1.55;
+      color: var(--text-secondary);
+      border: 1px solid var(--border);
+    }
+    .backend-banner strong { color: var(--text); }
+    .backend-banner.backend-bad {
+      border-color: rgba(248, 81, 73, 0.45);
+      background: rgba(248, 81, 73, 0.08);
+    }
+    .backend-banner.backend-warn {
+      border-color: rgba(227, 179, 65, 0.45);
+      background: rgba(227, 179, 65, 0.08);
+    }
+    .backend-banner code { font-size: 0.85em; }
+    .scan-msg code {
+      font-family: var(--font-mono);
+      font-size: 0.85em;
+      padding: 0.1rem 0.35rem;
+      border-radius: 4px;
+      background: rgba(0, 0, 0, 0.25);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .pulse-dot,
+      .scan-orbit span,
+      .scan-loading-bar-fill,
+      .bg-mesh::before,
+      .panel::before,
+      .eyebrow,
+      button:not(.secondary) { animation: none; }
+      .rise-in,
+      .check-row-enter { animation: none !important; opacity: 1 !important; transform: none !important; }
+      button { transition: none; }
+    }
+    .avail-banner {
+      margin-bottom: 1rem;
+      padding: 1.25rem 1.35rem;
+      border-radius: var(--radius-lg);
+      border: 1px solid var(--border);
+      border-left-width: 5px;
+      background: rgba(5, 8, 14, 0.75);
+      box-shadow: var(--shadow-sm);
+    }
+    .avail-banner strong {
+      font-family: var(--font-display);
+      font-size: 1.08rem;
+      font-weight: 700;
+      color: var(--text);
+      display: block;
+      letter-spacing: -0.02em;
+    }
+    .avail-banner.avail-good { border-left-color: var(--pass); background: rgba(63, 185, 80, 0.06); }
+    .avail-banner.avail-bad { border-left-color: var(--fail); background: rgba(248, 81, 73, 0.06); }
+    .avail-banner.avail-warn { border-left-color: var(--warn); background: rgba(227, 179, 65, 0.06); }
+    .avail-banner .avail-detail { font-size: 0.95rem; color: var(--muted); margin-top: 0.45rem; line-height: 1.6; }
+    .avail-banner .avail-tech { font-size: 0.72rem; color: var(--muted-2); margin-top: 0.6rem; font-family: var(--font-mono); word-break: break-all; line-height: 1.45; }
+    .checklist-section { margin-top: 0.5rem; }
+    .section-head {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 0.65rem 1.25rem;
+      margin-bottom: 1.35rem;
+    }
+    .section-head-text {
+      flex: 1 1 min(100%, 46rem);
+      min-width: 0;
+    }
+    .status-legend {
+      margin: 0.5rem 0 0;
+      font-size: 0.82rem;
+      color: var(--muted);
+      line-height: 1.55;
+      max-width: 52rem;
+    }
+    .status-legend strong {
+      color: var(--text);
+      font-weight: 700;
+    }
+    .section-title {
+      font-family: var(--font-display);
+      margin: 0;
+      font-size: clamp(1.35rem, 2.8vw, 1.85rem);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      color: var(--text);
+    }
+    .section-meta {
+      font-family: var(--font-display);
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--muted);
+      padding: 0.45rem 1rem;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: rgba(248, 250, 252, 0.04);
+    }
+    #checklist {
+      background: linear-gradient(165deg, rgba(30, 39, 56, 0.5) 0%, rgba(18, 24, 38, 0.92) 100%);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      padding: clamp(1.5rem, 2.5vw, 2.25rem) clamp(1.35rem, 2.5vw, 2rem);
+      box-shadow: var(--shadow-xl);
+    }
+    .cat {
+      font-family: var(--font-display);
+      font-size: 0.74rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      color: var(--accent-hover);
+      margin: 2rem 0 1rem;
+      padding-bottom: 0.65rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .cat:first-child { margin-top: 0; }
+    .check-row {
+      display: grid;
+      grid-template-columns: 1fr minmax(13.5rem, 18rem);
+      gap: 1.35rem 1.5rem;
+      align-items: start;
+      padding: 1.35rem 1.35rem;
+      margin-bottom: 0.85rem;
+      background: rgba(30, 39, 56, 0.55);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      border-left: 5px solid var(--muted-2);
+      transition: box-shadow 0.28s ease, border-color 0.2s ease, transform 0.25s ease;
+    }
+    .check-row.check-row-enter {
+      animation: rowRise 0.55s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+      animation-delay: calc(min(var(--i, 0), 45) * 0.028s);
+    }
+    @keyframes rowRise {
+      from {
+        opacity: 0;
+        transform: translateY(14px) scale(0.992);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+    .check-row:hover {
+      box-shadow: var(--shadow-sm);
+      border-color: rgba(56, 189, 248, 0.22);
+      transform: translateY(-2px);
+    }
+    .check-row.row-pass { border-left-color: var(--pass); }
+    .check-row.row-fail { border-left-color: var(--fail); }
+    .check-row.row-pending { border-left-color: var(--warn); }
+    .check-row.row-na { border-left-color: #6e7681; }
+    .check-main { min-width: 0; }
+    .id-title-line {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-start;
+      gap: 0.5rem 0.75rem;
+      margin-bottom: 0.4rem;
+    }
+    .id-chip {
+      font-family: var(--font-mono);
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      padding: 0.22rem 0.5rem;
+      border-radius: 6px;
+      background: rgba(88, 166, 255, 0.12);
+      color: var(--accent-hover);
+      border: 1px solid rgba(88, 166, 255, 0.22);
+      flex-shrink: 0;
+    }
+    .check-text { margin: 0; font-size: clamp(0.98rem, 1.5vw, 1.06rem); font-weight: 500; line-height: 1.55; flex: 1; min-width: 12rem; color: var(--text-secondary); }
+    .hint-row { margin: 0.4rem 0 0.6rem; display: flex; flex-wrap: wrap; gap: 0.4rem; align-items: center; }
+    .badge {
+      font-size: 0.65rem;
+      padding: 0.2rem 0.5rem;
+      border-radius: 6px;
+      background: rgba(240, 246, 252, 0.06);
+      color: var(--muted);
+      line-height: 1.35;
+      border: 1px solid var(--border);
+    }
+    .badge.auto {
+      background: rgba(63, 185, 80, 0.12);
+      color: #56d364;
+      border-color: rgba(63, 185, 80, 0.28);
+    }
+    .check-aside {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+      align-self: stretch;
+      justify-content: flex-start;
+    }
+    .field-label {
+      font-size: 0.62rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+    }
+    select.status-select,
+    textarea {
+      padding: 0.65rem 0.75rem;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-strong);
+      background: rgba(5, 8, 14, 0.85);
+      color: var(--text);
+      font-family: var(--font);
+      font-size: 1rem;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+    select.status-select {
+      width: 100%;
+      max-width: 100%;
+      font-family: var(--font-display);
+      font-weight: 700;
+      cursor: pointer;
+      min-height: 3.1rem;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%238899aa' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 0.65rem center;
+      padding-right: 2rem;
+    }
+    select.status-select:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: var(--shadow-glow);
+    }
+    .status-micro {
+      font-size: 0.62rem;
+      color: var(--muted-2);
+      line-height: 1.35;
+      margin-top: 0.15rem;
+    }
+    .check-row.row-pass select.status-select { border-color: rgba(63, 185, 80, 0.38); }
+    .check-row.row-fail select.status-select { border-color: rgba(248, 81, 73, 0.4); }
+    .check-row.row-pending select.status-select { border-color: rgba(227, 179, 65, 0.4); }
+    .check-row.row-na select.status-select { border-color: rgba(110, 118, 129, 0.45); }
+    textarea {
+      width: 100%;
+      min-height: 4rem;
+      margin-top: 0;
+      resize: vertical;
+      font-size: 0.95rem;
+      line-height: 1.55;
+    }
+    textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: var(--shadow-glow);
+    }
+    textarea::placeholder { color: var(--muted-2); }
+    @media (max-width: 720px) {
+      .check-row { grid-template-columns: 1fr; }
+      .check-aside { width: 100%; max-width: 100%; }
+    }
+    .site-footer {
+      padding: clamp(1.5rem, 3vw, 2.25rem) clamp(1.25rem, 4vw, 2rem);
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 0.92rem;
+      text-align: center;
+      line-height: 1.75;
+      background: rgba(5, 7, 12, 0.85);
+      backdrop-filter: blur(12px);
+    }
+    .site-footer code {
+      font-family: var(--font-mono);
+      font-size: 0.85em;
+      padding: 0.1rem 0.35rem;
+      border-radius: 4px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+    }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; text-underline-offset: 3px; }
+  </style>
+</head>
+<body>
+  <div class="bg-mesh" aria-hidden="true"></div>
+  <header class="site-header">
+    <span class="eyebrow">Release QA</span>
+    <h1>Go-Live Master Checklist</h1>
+    <p class="sub">
+      With <strong>Run quick scan</strong> (via this server, e.g. <code>http://localhost:3940</code>), each row gets a status:
+      <strong>Pass</strong> / <strong>Fail</strong> when signals are clear;
+      <strong>Needs check</strong> when the scan cannot auto-set Pass or Fail — you verify, then pick Pass or Fail.
+      <strong>Not scored</strong> only if that row does not apply to this release.
+      Notes with <strong>[auto]</strong> come from the scan. The panel shows <strong>reachability</strong> (up, DNS, timeout, TLS, HTTP 5xx). Deep QA (forms inbox, Zendesk, full crawl) stays manual or Playwright.
+    </p>
+  </header>
+  <main class="app-main">
+    <section class="panel rise-in" aria-labelledby="scan-heading">
+      <div class="panel-head">
+        <h2 class="panel-title" id="scan-heading">Quick scan</h2>
+        <p class="panel-desc">
+          Fetch one page + <code>robots.txt</code> via <code>POST /api/scan</code>. Same host as this page = leave <strong>Scan API base</strong> empty.
+          Static / Vercel-only UI = run <code>npm run go-live:audit:tunnel</code> locally, paste the tunnel <code>https://…</code> below.
+        </p>
+      </div>
+      <div class="toolbar-grid">
+        <div class="field-block">
+          <label for="siteUrl">Site URL</label>
+          <input id="siteUrl" type="url" placeholder="https://example.com" autocomplete="url" />
+        </div>
+        <div class="field-block">
+          <label for="auditApiBase">Scan API base <span class="label-hint">(tunnel — optional)</span></label>
+          <input
+            id="auditApiBase"
+            type="url"
+            placeholder="https://xxxx.ngrok-free.app — empty if this site serves /api/scan"
+            autocomplete="off"
+            spellcheck="false"
+          />
+        </div>
+        <div class="scan-actions">
+          <label class="chk-wrap">
+            <input type="checkbox" id="autoApply" checked />
+            <span>Auto-fill checklist after scan</span>
+          </label>
+          <div class="btn-group">
+            <button type="button" id="btnScan">Run quick scan</button>
+            <button type="button" class="secondary" id="btnApply" title="Re-apply results from the last successful scan">Apply last scan</button>
+            <button type="button" class="secondary" id="btnExport">Export CSV</button>
+            <button type="button" class="secondary" id="btnClear">Clear saved</button>
+          </div>
+        </div>
+      </div>
+      <div id="backendBanner" class="backend-banner" hidden role="status" aria-live="polite"></div>
+      <div id="scanResult" class="scan-out" hidden></div>
+    </section>
+
+    <section class="checklist-section rise-in rise-in-delay" aria-labelledby="checklist-heading">
+      <div class="section-head">
+        <div class="section-head-text">
+          <h2 class="section-title" id="checklist-heading">Checklist</h2>
+          <p class="status-legend" id="statusLegend">
+            <strong>Needs check</strong> — scan did not set Pass or Fail (usually manual QA). After you verify, pick <strong>Pass</strong> or <strong>Fail</strong> and add proof in notes.
+            <strong>Not scored</strong> — only when this row does not apply to this release.
+          </p>
+        </div>
+        <span class="section-meta" id="checklistCount" aria-live="polite">— items</span>
+      </div>
+      <div id="checklist"></div>
+    </section>
+  </main>
+  <footer class="site-footer">
+    This page: <strong id="selfLink"></strong>. Tunneled scan API: <code>npm run go-live:audit:tunnel</code> (see repo <code>go-live-audit/TUNNEL.md</code>). Full stack on Vercel: <code>go-live-audit/VERCEL.md</code>.
+  </footer>
+  <script>
+    (function () {
+      const STORAGE_KEY = 'goLiveAudit_v1';
+      const LAST_SCAN_KEY = 'goLiveAudit_lastScan_v1';
+      document.getElementById('selfLink').textContent = window.location.origin;
+
+      const ITEMS = [
+        { id: 'C01', cat: 'Content', text: 'No dummy content, placeholder text, or temporary images anywhere.', hint: 'manual + scan flags for common dummy phrases / lorem' },
+        { id: 'F01', cat: 'Forms', text: 'All forms fully functional and properly tested.', hint: 'manual + Playwright' },
+        { id: 'F02', cat: 'Forms', text: 'All forms include proper field validations.', hint: 'manual' },
+        { id: 'F03', cat: 'Forms', text: 'Form inputs sanitized / secured against malicious or invalid data.', hint: 'manual / security review' },
+        { id: 'F04', cat: 'Forms', text: 'Form submissions delivered correctly to email inbox or backend workflow.', hint: 'manual end-to-end' },
+        { id: 'E01', cat: 'Contact', text: 'One approved email used consistently across the entire website.', hint: 'manual count' },
+        { id: 'E02', cat: 'Contact', text: 'One approved phone number used consistently across the entire website.', hint: 'manual count' },
+        { id: 'E03', cat: 'Contact', text: 'Phone numbers have proper tel: links where applicable.', hint: 'scan: tel: count' },
+        { id: 'S01', cat: 'Security', text: 'All required security measures implemented.', hint: 'manual / security headers scan (not included here)' },
+        { id: 'S02', cat: 'Rendering', text: 'SSR properly implemented where required.', hint: 'architecture review' },
+        { id: 'SEO1', cat: 'Indexing', text: 'Site remains noindex / nofollow until final stakeholder approval.', hint: 'scan: meta robots + X-Robots-Tag' },
+        { id: 'R01', cat: 'Responsive', text: 'Fully responsive on mobile, tablet, iPad, laptop, desktop.', hint: 'manual + Playwright viewports' },
+        { id: 'U01', cat: 'UI / UX', text: 'All buttons clickable and route correctly.', hint: 'manual + Playwright' },
+        { id: 'U02', cat: 'UI / UX', text: 'All internal links work — no broken routing.', hint: 'link crawler / Playwright' },
+        { id: 'U03', cat: 'UI / UX', text: 'Images placed, aligned, optimized, displayed correctly.', hint: 'manual + scan: img/alt counts (rough)' },
+        { id: 'U04', cat: 'Typography', text: 'Heading, paragraph, button font sizes consistent sitewide.', hint: 'manual design QA' },
+        { id: 'Z01', cat: 'Zendesk', text: 'Zendesk chat integrated and fully tested.', hint: 'manual' },
+        { id: 'Z02', cat: 'Zendesk', text: 'Zendesk popup code installed and working.', hint: 'manual' },
+        { id: 'C02', cat: 'CTA', text: 'All CTAs function and lead to intended outcome.', hint: 'manual' },
+        { id: 'C03', cat: 'Contact', text: 'Contact details (email, phone, address) updated everywhere.', hint: 'manual' },
+        { id: 'M01', cat: 'Meta', text: 'Meta titles, meta descriptions, and favicon correctly added.', hint: 'scan: title, description, favicon link' },
+        { id: 'M02', cat: 'Brand', text: 'Logo properly placed and linked where required.', hint: 'manual' },
+        { id: 'P01', cat: 'Performance', text: 'Page speed optimized across the entire website.', hint: 'Lighthouse / WebPageTest' },
+        { id: 'P02', cat: 'Performance', text: 'Images and assets compressed and optimized.', hint: 'manual / build pipeline' },
+        { id: 'P03', cat: 'Quality', text: 'No broken images, major layout shifts, or UI issues.', hint: 'manual + monitoring' },
+        { id: 'B01', cat: 'Browsers', text: 'Cross-browser testing (Chrome, Safari, Edge, Firefox if required).', hint: 'Playwright projects' },
+        { id: 'L01', cat: 'Layout', text: 'Sections visually aligned with consistent spacing.', hint: 'manual' },
+        { id: 'L02', cat: 'Layout', text: 'Header and footer complete and working on all pages.', hint: 'manual' },
+        { id: 'L03', cat: 'Legal', text: 'Privacy Policy, Terms, and other legal pages added (if applicable).', hint: 'manual' },
+        { id: 'L04', cat: 'Flows', text: 'Thank you pages, success messages, and error states tested.', hint: 'manual' },
+        { id: 'L05', cat: 'Redirects', text: 'Redirects working properly where required.', hint: 'manual / scan sees final URL' },
+        { id: 'I01', cat: 'Infrastructure', text: 'SSL active — site loads on HTTPS.', hint: 'scan: final URL scheme' },
+        { id: 'I02', cat: 'Indexing', text: 'Sitemap and robots.txt configured before indexing enabled.', hint: 'scan: robots.txt + Sitemap: line (rough)' },
+        { id: 'I03', cat: 'Analytics', text: 'Analytics, tracking codes, and third-party scripts tested.', hint: 'manual' },
+        { id: 'I04', cat: 'Integrations', text: 'Chat, CRM, webhook, and email automation verified.', hint: 'manual' },
+      ];
+
+      const countEl = document.getElementById('checklistCount');
+      if (countEl) countEl.textContent = ITEMS.length + ' items';
+
+      function loadState() {
+        try {
+          return JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+        } catch {
+          return {};
+        }
+      }
+      function saveState(state) {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      }
+
+      let state = loadState();
+      let lastScanPayload = null;
+      try {
+        lastScanPayload = JSON.parse(localStorage.getItem(LAST_SCAN_KEY) || 'null');
+      } catch {
+        lastScanPayload = null;
+      }
+      const siteEl = document.getElementById('siteUrl');
+      siteEl.value = state.siteUrl || '';
+      const apiBaseEl = document.getElementById('auditApiBase');
+      apiBaseEl.value = state.apiBaseUrl || '';
+
+      function normalizeScanApiBase(raw) {
+        const s = String(raw || '').trim();
+        if (!s) return '';
+        try {
+          return new URL(s).origin;
+        } catch {
+          return '';
+        }
+      }
+
+      function scanEndpoint() {
+        const base = normalizeScanApiBase(state.apiBaseUrl);
+        if (base) return base + '/api/scan';
+        return '/api/scan';
+      }
+
+      /** Short labels so the closed select box does not truncate (tooltip + notes carry full meaning). */
+      const STATUS_LABELS = {
+        pending: 'Needs check',
+        pass: 'Pass',
+        fail: 'Fail',
+        na: 'Not scored',
+      };
+      function availabilityTone(state) {
+        if (state === 'up') return 'avail-good';
+        if (
+          [
+            'server_error',
+            'dns_failed',
+            'connection_refused',
+            'unreachable',
+            'connection_reset',
+            'timeout',
+          ].includes(state)
+        )
+          return 'avail-bad';
+        return 'avail-warn';
+      }
+
+      function renderAvailabilityBanner(av, techNote) {
+        if (!av || !av.headline) return '';
+        const tone = availabilityTone(av.state);
+        const tech = techNote
+          ? '<div class="avail-tech">Technical: ' + escapeHtml(techNote) + '</div>'
+          : '';
+        return (
+          '<div class="avail-banner ' +
+          tone +
+          '"><strong>' +
+          escapeHtml(av.headline) +
+          '</strong><div class="avail-detail">' +
+          escapeHtml(av.detail || '') +
+          '</div>' +
+          tech +
+          '</div>'
+        );
+      }
+
+      function renderOverallSummary(s) {
+        if (!s || !s.headline) return '';
+        const lvl = ['good', 'caution', 'concern', 'bad'].includes(s.level) ? s.level : 'caution';
+        const tone = 'overall-' + lvl;
+        const c = s.counts || {};
+        const tallyParts = [];
+        if (typeof c.pass === 'number') tallyParts.push('Pass ' + c.pass);
+        if (typeof c.fail === 'number') tallyParts.push('Fail ' + c.fail);
+        if (typeof c.pending === 'number') tallyParts.push('Needs check ' + c.pending);
+        if (typeof c.notScored === 'number' && c.notScored > 0)
+          tallyParts.push('Not scored ' + c.notScored);
+        const tally =
+          tallyParts.length > 0
+            ? '<div class="overall-tally">' +
+              tallyParts.map(function (t) { return escapeHtml(t); }).join(' · ') +
+              '</div>'
+            : '';
+        return (
+          '<div class="overall-summary ' +
+          tone +
+          '" role="status">' +
+          '<strong>' +
+          escapeHtml(s.headline) +
+          '</strong>' +
+          (s.subline
+            ? '<div class="overall-sub">' + escapeHtml(s.subline) + '</div>'
+            : '') +
+          tally +
+          '</div>'
+        );
+      }
+
+      const STATUS_HINTS = {
+        pending:
+          'Scan did not set Pass or Fail — verify yourself, then choose Pass or Fail (read [auto] note).',
+        pass: 'Automated checks passed for this row (see [auto] notes).',
+        fail: 'Automated checks reported an issue — see notes.',
+        na: 'Use when this checklist row does not apply to your release — you set this manually; the scan does not auto-fill it.',
+      };
+
+      function applyAutoChecks(autoChecks) {
+        if (!Array.isArray(autoChecks)) return;
+        if (!state.items) state.items = {};
+        for (const ac of autoChecks) {
+          if (!ac || !ac.id) continue;
+          state.items[ac.id] = {
+            status: ac.status || 'pending',
+            note: ac.note || '',
+            auto: true,
+          };
+        }
+        saveState(state);
+        render();
+      }
+
+      function render() {
+        const host = document.getElementById('checklist');
+        let lastCat = '';
+        const frag = document.createDocumentFragment();
+        ITEMS.forEach((it, idx) => {
+          if (it.cat !== lastCat) {
+            lastCat = it.cat;
+            const h = document.createElement('div');
+            h.className = 'cat';
+            h.textContent = it.cat;
+            frag.appendChild(h);
+          }
+          const row = document.createElement('div');
+          const st = state.items && state.items[it.id] ? state.items[it.id] : { status: 'pending', note: '' };
+          const rawStatus = st.status || 'pending';
+          const statusKey = ['pending', 'pass', 'fail', 'na'].includes(rawStatus) ? rawStatus : 'pending';
+          row.className = 'check-row row-' + statusKey + ' check-row-enter';
+          row.style.setProperty('--i', String(idx));
+          const autoBadge = st.auto ? '<span class="badge auto">Auto from scan</span>' : '';
+          row.innerHTML =
+            '<div class="check-main">' +
+            '<div class="id-title-line"><span class="id-chip">' +
+            escapeHtml(it.id) +
+            '</span><p class="check-text">' +
+            escapeHtml(it.text) +
+            '</p></div>' +
+            '<div class="hint-row">' +
+            autoBadge +
+            (autoBadge ? ' ' : '') +
+            '<span class="badge">' +
+            escapeHtml(it.hint) +
+            '</span></div>' +
+            '<textarea data-id="' +
+            it.id +
+            '" placeholder="Notes, ticket link, evidence…">' +
+            escapeHtml(st.note || '') +
+            '</textarea></div>' +
+            '<aside class="check-aside"><span class="field-label">Status</span>' +
+            (st.auto
+              ? '<span class="status-micro">Set automatically — hover status for details</span>'
+              : '') +
+            '<select class="status-select" data-id="' +
+            it.id +
+            '" title="' +
+            escapeHtml(STATUS_HINTS[statusKey] || '') +
+            '">' +
+            ['pending', 'pass', 'fail', 'na']
+              .map(
+                (v) =>
+                  '<option value="' +
+                  v +
+                  '"' +
+                  (statusKey === v ? ' selected' : '') +
+                  ' title="' +
+                  escapeHtml(STATUS_HINTS[v] || '') +
+                  '">' +
+                  escapeHtml(STATUS_LABELS[v] || v) +
+                  '</option>'
+              )
+              .join('') +
+            '</select></aside>';
+          frag.appendChild(row);
+        });
+        host.innerHTML = '';
+        host.appendChild(frag);
+
+        host.querySelectorAll('select[data-id]').forEach((sel) => {
+          sel.addEventListener('change', () => {
+            if (!state.items) state.items = {};
+            state.items[sel.dataset.id] = state.items[sel.dataset.id] || {};
+            state.items[sel.dataset.id].status = sel.value;
+            state.items[sel.dataset.id].note =
+              host.querySelector('textarea[data-id="' + sel.dataset.id + '"]').value;
+            state.items[sel.dataset.id].auto = false;
+            saveState(state);
+            const rowEl = sel.closest('.check-row');
+            if (rowEl) {
+              const v = ['pending', 'pass', 'fail', 'na'].includes(sel.value) ? sel.value : 'pending';
+              rowEl.className = 'check-row row-' + v;
+            }
+            sel.title = STATUS_HINTS[sel.value] || '';
+          });
+        });
+        host.querySelectorAll('textarea[data-id]').forEach((ta) => {
+          ta.addEventListener('input', () => {
+            if (!state.items) state.items = {};
+            state.items[ta.dataset.id] = state.items[ta.dataset.id] || {};
+            state.items[ta.dataset.id].note = ta.value;
+            state.items[ta.dataset.id].status =
+              host.querySelector('select[data-id="' + ta.dataset.id + '"]').value;
+            state.items[ta.dataset.id].auto = false;
+            saveState(state);
+          });
+        });
+      }
+
+      function escapeHtml(s) {
+        return String(s)
+          .replace(/&/g, '&amp;')
+          .replace(/</g, '&lt;')
+          .replace(/>/g, '&gt;')
+          .replace(/"/g, '&quot;');
+      }
+
+      const backendBannerEl = document.getElementById('backendBanner');
+
+      function hideBackendBanner() {
+        if (!backendBannerEl) return;
+        backendBannerEl.hidden = true;
+        backendBannerEl.className = 'backend-banner';
+        backendBannerEl.textContent = '';
+      }
+
+      function showBackendBanner(kind, html) {
+        if (!backendBannerEl) return;
+        backendBannerEl.hidden = false;
+        backendBannerEl.className = 'backend-banner ' + (kind === 'warn' ? 'backend-warn' : 'backend-bad');
+        backendBannerEl.innerHTML = html;
+      }
+
+      async function probeScanBackend() {
+        if (!backendBannerEl) return;
+        const ep = scanEndpoint();
+        const sig =
+          typeof AbortSignal !== 'undefined' && AbortSignal.timeout
+            ? AbortSignal.timeout(12000)
+            : undefined;
+        try {
+          const r = await fetch(ep, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ url: '' }),
+            signal: sig,
+          });
+          const ct = (r.headers.get('content-type') || '').toLowerCase();
+          const data = ct.includes('application/json') ? await r.json().catch(function () { return {}; }) : {};
+
+          if (r.status === 401 || r.status === 403) {
+            showBackendBanner(
+              'warn',
+              '<strong>Login / deployment protection is blocking the API.</strong> In Vercel: Project → <strong>Settings → Deployment Protection</strong> → turn off for this project (or use the <strong>Production</strong> domain without preview protection). Until then, <code>POST /api/scan</code> cannot run from the browser.'
+            );
+            return;
+          }
+
+          if (r.status === 400 && data && String(data.error || '').toLowerCase().includes('missing')) {
+            hideBackendBanner();
+            return;
+          }
+
+          if (data && data.ok === false && String(data.error || '').toLowerCase().includes('missing')) {
+            hideBackendBanner();
+            return;
+          }
+
+          if (!ct.includes('application/json')) {
+            showBackendBanner(
+              'bad',
+              '<strong>No scan backend on this host.</strong> This URL only serves static files — there is no <code>POST /api/scan</code>. Fix: deploy the <strong>full GitHub repo</strong> to Vercel (needs <code>api/scan.js</code> + <code>npm run build</code>) — see <code>go-live-audit/VERCEL.md</code>. Or run <code>npm run go-live:audit:tunnel</code> on your PC and paste the tunnel URL into <strong>Scan API base</strong> (<code>TUNNEL.md</code>).'
+            );
+            return;
+          }
+
+          if (r.status === 404) {
+            showBackendBanner(
+              'bad',
+              '<strong>Scan API not found (404).</strong> Redeploy with serverless <code>api/scan.js</code> or set <strong>Scan API base</strong> to a running tunnel / Render URL.'
+            );
+            return;
+          }
+
+          hideBackendBanner();
+        } catch (e) {
+          showBackendBanner(
+            'bad',
+            '<strong>Cannot reach scan API.</strong> Tried <code>' +
+              escapeHtml(ep) +
+              '</code>. Check <strong>Scan API base</strong>, your network, or run locally: <code>npm run go-live:audit</code> → <code>http://localhost:3940</code>.<br/><br/><small>' +
+              escapeHtml(e.message || String(e)) +
+              '</small>'
+          );
+        }
+      }
+
+      document.getElementById('btnClear').addEventListener('click', () => {
+        if (!confirm('Clear saved checklist + URL from this browser?')) return;
+        state = {};
+        siteEl.value = '';
+        lastScanPayload = null;
+        localStorage.removeItem(LAST_SCAN_KEY);
+        saveState(state);
+        document.getElementById('scanResult').hidden = true;
+        document.getElementById('backendBanner').hidden = true;
+        document.getElementById('backendBanner').textContent = '';
+        apiBaseEl.value = '';
+        render();
+        probeScanBackend();
+      });
+
+      document.getElementById('btnApply').addEventListener('click', () => {
+        try {
+          lastScanPayload = JSON.parse(localStorage.getItem(LAST_SCAN_KEY) || 'null');
+        } catch {
+          lastScanPayload = null;
+        }
+        if (lastScanPayload && Array.isArray(lastScanPayload.autoChecks)) {
+          applyAutoChecks(lastScanPayload.autoChecks);
+        } else {
+          alert('Run a successful quick scan first, then use Apply last scan.');
+        }
+      });
+
+      document.getElementById('btnExport').addEventListener('click', () => {
+        const rows = [['ID', 'Category', 'Item', 'Status', 'Notes', 'Site URL']];
+        const url = siteEl.value.trim();
+        ITEMS.forEach((it) => {
+          const st = (state.items && state.items[it.id]) || { status: 'pending', note: '' };
+          const raw = st.status || 'pending';
+          const label = STATUS_LABELS[raw] || raw;
+          rows.push([it.id, it.cat, it.text, label, (st.note || '').replace(/\r?\n/g, ' '), url]);
+        });
+        const csv = rows.map((r) => r.map((c) => '"' + String(c).replace(/"/g, '""') + '"').join(',')).join('\n');
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = 'go-live-audit-export.csv';
+        a.click();
+        URL.revokeObjectURL(a.href);
+      });
+
+      siteEl.addEventListener('change', () => {
+        state.siteUrl = siteEl.value.trim();
+        saveState(state);
+      });
+
+      apiBaseEl.addEventListener('change', () => {
+        state.apiBaseUrl = apiBaseEl.value.trim();
+        saveState(state);
+        probeScanBackend();
+      });
+
+      document.getElementById('btnScan').addEventListener('click', async () => {
+        const url = siteEl.value.trim();
+        state.siteUrl = url;
+        state.apiBaseUrl = apiBaseEl.value.trim();
+        saveState(state);
+        const out = document.getElementById('scanResult');
+        const btn = document.getElementById('btnScan');
+        if (!url) {
+          out.hidden = false;
+          out.innerHTML =
+            '<div class="scan-msg scan-msg-warn">Enter a site URL (include <code>https://</code>).</div>';
+          return;
+        }
+        const baseRaw = (state.apiBaseUrl || '').trim();
+        if (baseRaw && !normalizeScanApiBase(baseRaw)) {
+          out.hidden = false;
+          out.innerHTML =
+            '<div class="scan-msg scan-msg-warn">Scan API base must be a full URL like <code>https://xxxx.ngrok-free.app</code> (no path).</div>';
+          return;
+        }
+        btn.disabled = true;
+        out.hidden = false;
+        out.innerHTML =
+          '<div class="scan-loading">' +
+          '<div class="scan-loading-top">' +
+          '<div class="scan-orbit" aria-hidden="true"><span></span><span></span><span></span></div>' +
+          '<div><div class="scan-loading-title">Scanning live…</div>' +
+          '<div class="scan-loading-sub">Fetching HTML, headers, and robots.txt</div></div></div>' +
+          '<div class="scan-loading-bar"><div class="scan-loading-bar-fill"></div></div></div>';
+        try {
+          const res = await fetch(scanEndpoint(), {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ url }),
+          });
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok || data.ok === false) {
+            out.hidden = false;
+            const oa = data.overallSummary ? renderOverallSummary(data.overallSummary) : '';
+            if (data.availability) {
+              out.innerHTML = oa + renderAvailabilityBanner(data.availability, data.error || '');
+            } else if (oa) {
+              out.innerHTML = oa;
+            } else {
+              out.textContent = 'Error: ' + (data.error || res.statusText || res.status);
+            }
+            return;
+          }
+          lastScanPayload = data;
+          localStorage.setItem(LAST_SCAN_KEY, JSON.stringify(data));
+
+          const h = data.htmlSignals || {};
+          const overallBlock = data.overallSummary
+            ? renderOverallSummary(data.overallSummary)
+            : '';
+          const availBlock = data.availability
+            ? renderAvailabilityBanner(data.availability, null)
+            : '';
+          const lines = [
+            'Final URL: ' + data.finalUrl,
+            'Content-Type: ' + (data.contentType || '—'),
+            'HTTP status: ' + data.statusCode,
+            'HTTPS: ' + (h.hasHttps ? 'yes' : 'no'),
+            'X-Robots-Tag: ' + (data.xRobotsTag || '—'),
+            'HTML robots meta (noindex/nofollow): ' + (h.robotsMetaNoindex ? 'yes' : 'no'),
+            'tel: links: ' + (h.telCount != null ? h.telCount : '—') + ' | mailto: links: ' + (h.mailtoCount != null ? h.mailtoCount : '—'),
+            '<form> count: ' + (h.formCount != null ? h.formCount : '—'),
+            'Viewport meta: ' + (h.hasViewport ? 'yes' : 'no') + ' | charset meta: ' + (h.hasCharset ? 'yes' : 'no'),
+            'Title length: ' + (h.titleLength != null ? h.titleLength : '—') + ' | meta description length: ' + (h.metaDescriptionLength != null ? h.metaDescriptionLength : '—'),
+            'Favicon link hint: ' + (h.hasFaviconLink ? 'yes' : 'no'),
+            'Zendesk-like script strings: ' + (h.zendeskSnippetDetected ? 'found (verify manually)' : 'not detected'),
+            'Lorem ipsum: ' + (h.loremIpsumDetected ? 'FOUND' : 'not found'),
+            '“Coming soon” / placeholder phrases: ' +
+              (h.comingSoonDetected || h.placeholderPhrasesDetected ? 'FLAG' : 'not flagged'),
+            '<img> tags: ' + (h.imageTags != null ? h.imageTags : '—') + ' | missing/empty alt (rough): ' + (h.imagesMissingOrEmptyAlt != null ? h.imagesMissingOrEmptyAlt : '—'),
+          ];
+          if (data.robotsTxt && data.robotsTxt.fetched) {
+            lines.push(
+              'robots.txt HTTP: ' +
+                data.robotsTxt.status +
+                ' | Sitemap: line: ' +
+                (data.robotsTxt.hasSitemapLine ? 'yes' : 'no')
+            );
+            if (data.robotsTxt.preview) lines.push('robots.txt preview: ' + data.robotsTxt.preview.slice(0, 220).replace(/\n/g, ' '));
+          }
+          if (data.scanWarnings && data.scanWarnings.length) {
+            lines.push('Warnings:');
+            data.scanWarnings.forEach((w) => lines.push('— ' + w.message));
+          }
+          if (Array.isArray(data.autoChecks) && data.autoChecks.length) {
+            lines.push('', 'Auto checklist rows (' + data.autoChecks.length + '):');
+            data.autoChecks.forEach((ac) => lines.push(ac.id + ' → ' + ac.status + ' — ' + ac.note));
+          }
+          lines.push('', data.disclaimer);
+          if (document.getElementById('autoApply').checked && Array.isArray(data.autoChecks) && data.autoChecks.length) {
+            lines.splice(
+              1,
+              0,
+              '✓ Checklist updated from scan — scroll to review each row’s status and [auto] notes.'
+            );
+            applyAutoChecks(data.autoChecks);
+          }
+          const detailLines = lines.map((l) =>
+            l.startsWith('<') ? l : '<div class="scan-line">' + escapeHtml(l) + '</div>'
+          );
+          out.innerHTML =
+            overallBlock +
+            availBlock +
+            (detailLines.length
+              ? '<div class="scan-scroll">' + detailLines.join('') + '</div>'
+              : '');
+          hideBackendBanner();
+        } catch (e) {
+          const hint =
+            (state.apiBaseUrl || '').trim() === ''
+              ? ' If this UI is on a static host, run <code>npm run go-live:audit:tunnel</code> and set <strong>Scan API base</strong> to the tunnel URL.'
+              : ' Check that the tunnel is running and the URL matches <strong>Scan API base</strong> (CORS is enabled on the API).';
+          out.innerHTML =
+            '<div class="scan-msg scan-msg-warn"><strong>Request failed</strong> — same-origin needs the audit server (e.g. <code>http://localhost:3940</code>), or use a tunnel + Scan API base.' +
+            hint +
+            '<br/><br/>Error: ' +
+            escapeHtml(e.message) +
+            '</div>';
+        } finally {
+          btn.disabled = false;
+        }
+      });
+
+      render();
+      probeScanBackend();
+    })();
+  </script>
+</body>
+</html>

@@ -1,5 +1,6 @@
 node_modules/
-public/
+# Only root build output (plain "public/" ignored go-live-audit/public — Vercel build failed)
+/public/
 api/_scan-core.js
 .env
 .env.*
